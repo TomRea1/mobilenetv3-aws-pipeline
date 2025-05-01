@@ -1,0 +1,32 @@
+{
+    "PipelineExecutionSummaries": [
+        {
+            "PipelineExecutionArn": "arn:aws:sagemaker:eu-north-1:564750642551:pipeline/CaptionModelPipeline/execution/4qzps1fkrpcb",
+            "StartTime": "2025-04-29T18:42:31.393000+00:00",
+            "PipelineExecutionStatus": "Failed",
+            "PipelineExecutionDisplayName": "execution-1745952151458",
+            "PipelineExecutionFailureReason": "Step failure: One or multiple steps failed."
+        },
+        {
+            "PipelineExecutionArn": "arn:aws:sagemaker:eu-north-1:564750642551:pipeline/CaptionModelPipeline/execution/h1njf48ecrk8",
+            "StartTime": "2025-04-29T18:39:20.266000+00:00",
+            "PipelineExecutionStatus": "Failed",
+            "PipelineExecutionDisplayName": "execution-1745951960328",
+            "PipelineExecutionFailureReason": "Step failure: One or multiple steps failed."
+        },
+        {
+            "PipelineExecutionArn": "arn:aws:sagemaker:eu-north-1:564750642551:pipeline/CaptionModelPipeline/execution/79k0i4xni74e",
+            "StartTime": "2025-04-29T18:37:54.732000+00:00",
+            "PipelineExecutionStatus": "Failed",
+            "PipelineExecutionDisplayName": "execution-1745951874818",
+            "PipelineExecutionFailureReason": "Step failure: One or multiple steps failed."
+        },
+        {
+            "PipelineExecutionArn": "arn:aws:sagemaker:eu-north-1:564750642551:pipeline/CaptionModelPipeline/execution/29fzfoc4j2g8",
+            "StartTime": "2025-04-29T18:23:10.822000+00:00",
+            "PipelineExecutionStatus": "Failed",
+            "PipelineExecutionDisplayName": "execution-1745950990942",
+            "PipelineExecutionFailureReason": "Step failure: One or multiple steps failed."
+        }
+    ]
+}

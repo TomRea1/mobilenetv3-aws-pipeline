@@ -1,0 +1,36 @@
+{
+  "name": "caption-stack",
+  "version": "0.1.0",
+  "bin": {
+    "caption-stack": "bin/caption-stack.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "22.7.9",
+    "aws-cdk": "^2.1012.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.6.3"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-sagemaker-alpha": "^2.192.0-alpha.0",
+    "aws-cdk-lib": "^2.193.0",
+    "constructs": "^10.4.2"
+  },
+  "description": "This is a blank project for CDK development with TypeScript.",
+  "main": "jest.config.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
