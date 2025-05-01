@@ -1,5 +1,5 @@
 
-import os, tarfile, torch, torchvision
+import os, tarfile, torch, torchvision, glob
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms as T
@@ -24,6 +24,12 @@ loader   = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
 
 # build model architecture - thank you torchvision ! 
 net = torchvision.models.mobilenet_v3_small(weights=None)
+
+# Scrape the tar off the model
+for archive in glob.glob(os.path.join(model_in, "*.tar.gz")):
+    print(f"Extracting {archive}")
+    with tarfile.open(archive, 'r.gz') as tar:
+        tar.extractall(model_in)
 
 # Load-in previous model weights
 checkpoint_pt = Path(model_in) / "mobilenetv3_traced.pt"
