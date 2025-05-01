@@ -115,7 +115,7 @@ export class CaptionStackStack extends Stack {
 
     endpointConfig.addDependency(model);
     endpoint.addDependency(endpointConfig);
-  }
+  
 
 
 //Lambdas 
@@ -178,4 +178,5 @@ deployFn.addToRolePolicy(new iam.PolicyStatement({
 
 
 
+}
 }
