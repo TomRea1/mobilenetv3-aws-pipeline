@@ -22,22 +22,30 @@ dataset  = ImageFolder(train_dir, transform=transform)
 # batch is 1 because i've only uploaded a few test images 
 loader   = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
 
-# build model architecture - thank you torchvision ! 
-net = torchvision.models.mobilenet_v3_large(weights=None)
-
 # Scrape the tar off the model
 for archive in glob.glob(os.path.join(model_in, "*.tar.gz")):
     print(f"Extracting {archive}")
     with tarfile.open(archive, 'r:*') as tar:
         tar.extractall(model_in)
 
+# build model architecture - thank you torchvision ! 
+net = torchvision.models.mobilenet_v3_small(weights=None)
+
+
+
+
 # Load-in previous model weights
-checkpoint_pt = Path(model_in) / "mobilenetv3_traced.pt"
+checkpoint_pt = Path(model_in) / "model_state.pth"
 if checkpoint_pt.exists():
-    print(f"[INFO] Loading checkpoint: {checkpoint_pt}")
-    net.load_state_dict(torch.jit.load(str(checkpoint_pt)).state_dict())
+    print(f"Loading checkpoint: {checkpoint_pt}")
+    net.load_state_dict(torch.load(checkpoint_pt, map_location="cpu"))
 else:
-    raise RuntimeError("Expected previous model.tar.gz but none found!")
+    print("Expected previous model.tar.gz but none found!")
+    net.load_state_dict(
+        torchvision.models.mobilenet_v3_small(
+            weights=models.MobileNet_V3_Small_Weights.IMAGENET1k_V1
+        ).state_dict()
+    )
 
 # 1 epoch - proof of concept
 net.train()
