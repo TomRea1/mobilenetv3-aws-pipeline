@@ -6,6 +6,11 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3  from 'aws-cdk-lib/aws-s3';
 import * as sm  from 'aws-cdk-lib/aws-sagemaker';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+
 
 // Outline the aws resources to be used 
 export class CaptionStackStack extends Stack {
@@ -112,4 +117,72 @@ export class CaptionStackStack extends Stack {
     endpoint.addDependency(endpointConfig);
   }
 }
+
+//Lambdas 
+
+const triggerFn = new lambda.Function(this, 'TriggerPipelineFn', {
+  runtime: lambda.Runtime.PYTHON_3_9,
+  code: lambda.Code.fromAsset('lambda/trigger'), // folder with .py & requirements.txt
+  handler: 'trigger_pipeline_fn.handler',
+  environment: { PIPELINE_NAME: 'CaptionModelPipeline' },
+  vpc, subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+  securityGroups: [endpointSg],
+});
+
+assetBucket.addEventNotification(
+  s3.EventType.OBJECT_CREATED_PUT,
+  new s3n.LambdaDestination(triggerFn),
+  { prefix: 'train-images/' }
+);
+
+const deployFn = new lambda.Function(this, 'DeployIfGoodFn', {
+  runtime: lambda.Runtime.PYTHON_3_9,
+  code: lambda.Code.fromAsset('lambda/deploy'),
+  handler: 'deploy_if_good_fn.handler',
+  environment: {
+    SM_ROLE_ARN: sagemakerRole.roleArn,
+    ENDPOINT_NAME: endpoint.ref,
+    INFERENCE_IMAGE: '763104351884.dkr.ecr.eu-north-1.amazonaws.com/pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
+    VPC_CONFIG: JSON.stringify({
+      Subnets: vpc.privateSubnets.map(s=>s.subnetId),
+      SecurityGroupIds: [endpointSg.securityGroupId],
+    }),
+  },
+  vpc, subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+  securityGroups: [endpointSg],
+});
+
+new events.Rule(this, 'PipelineSuccessRule', {
+  eventPattern: {
+    source: ['aws.sagemaker'],
+    detailType: ['SageMaker Model Building Pipeline Execution Status Change'],
+    detail: { pipelineName: ['CaptionModelPipeline'], currentPipelineExecutionStatus: ['Succeeded'] },
+  },
+  targets: [new targets.LambdaFunction(deployFn)],
+});
+
+
+
+
+
+
+
+
+
+
+triggerFn.addToRolePolicy(new iam.PolicyStatement({
+  actions: ['sagemaker:StartPipelineExecution'],
+  resources: ['*'],
+}));
+deployFn.addToRolePolicy(new iam.PolicyStatement({
+  actions: [
+    'sagemaker:CreateModel',
+    'sagemaker:CreateEndpointConfig',
+    'sagemaker:UpdateEndpoint',
+    'sagemaker:DescribeEndpoint',
+  ],
+  resources: ['*'],
+}));
+
+
 
