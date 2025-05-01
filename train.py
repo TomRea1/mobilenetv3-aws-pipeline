@@ -28,7 +28,7 @@ net = torchvision.models.mobilenet_v3_small(weights=None)
 # Scrape the tar off the model
 for archive in glob.glob(os.path.join(model_in, "*.tar.gz")):
     print(f"Extracting {archive}")
-    with tarfile.open(archive, 'r.gz') as tar:
+    with tarfile.open(archive, 'r:*') as tar:
         tar.extractall(model_in)
 
 # Load-in previous model weights
