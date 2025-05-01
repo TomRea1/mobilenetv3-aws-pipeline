@@ -116,7 +116,7 @@ export class CaptionStackStack extends Stack {
     endpointConfig.addDependency(model);
     endpoint.addDependency(endpointConfig);
   }
-}
+
 
 //Lambdas 
 
@@ -148,7 +148,7 @@ const deployFn = new lambda.Function(this, 'DeployIfGoodFn', {
       SecurityGroupIds: [endpointSg.securityGroupId],
     }),
   },
-  vpc, subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+  vpc, vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
   securityGroups: [endpointSg],
 });
 
@@ -160,14 +160,6 @@ new events.Rule(this, 'PipelineSuccessRule', {
   },
   targets: [new targets.LambdaFunction(deployFn)],
 });
-
-
-
-
-
-
-
-
 
 
 triggerFn.addToRolePolicy(new iam.PolicyStatement({
@@ -186,3 +178,4 @@ deployFn.addToRolePolicy(new iam.PolicyStatement({
 
 
 
+}
