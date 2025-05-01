@@ -68,7 +68,7 @@ state_path = Path(model_out)/"model_state.pth"
 script_path = Path(model_out)/"mobilenetv3_traced.pt"
 
 torch.save(net.state_dict(), state_path)
-scripted = torch.jit.trac(net.eval(), torch.randn(1,3,224,224))
+scripted = torch.jit.trace(net.eval(), torch.randn(1,3,224,224))
 scripted.save(script_path)
 
 
