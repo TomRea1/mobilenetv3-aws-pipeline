@@ -34,7 +34,7 @@ training_step = TrainingStep(
             content_type="application/x-image",
         ),
         "model" : sagemaker.inputs.TrainingInput(
-            "s3://cdk-hnb659fds-assets-564750642551-eu-north-1/train-images/",
+            "s3://cdk-hnb659fds-assets-564750642551-eu-north-1/model/latest/",
             content_type="application/x-tar" 
         ),
     },
