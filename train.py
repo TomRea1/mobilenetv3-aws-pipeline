@@ -29,7 +29,7 @@ for archive in glob.glob(os.path.join(model_in, "*.tar.gz")):
         tar.extractall(model_in)
 
 # build model architecture - thank you torchvision ! 
-net = models.mobilenet_v3_small(weights=None)
+net = torchvision.models.mobilenet_v3_small(weights=None)
 
 
 
@@ -42,8 +42,8 @@ if checkpoint_pt.exists():
 else:
     print("Expected previous model.tar.gz but none found!")
     net.load_state_dict(
-        models.mobilenet_v3_small(
-            weights=models.MobileNet_V3_Small_Weights.IMAGENET1K_V1
+        torchvision.models.mobilenet_v3_small(
+            weights=torchvision.models.MobileNet_V3_Small_Weights.IMAGENET1K_V1
         ).state_dict()
     )
 
