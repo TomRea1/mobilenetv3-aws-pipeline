@@ -50,12 +50,26 @@ export class CaptionStackStack extends Stack {
       subnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
     });
 
-    // Make our s3 bucket which will hold the model and the training data 
-    const assetBucket = s3.Bucket.fromBucketName(
-      this,
-      'ModelBucket',
-      'cdk-hnb659fds-assets-564750642551-eu-north-1',
-    );
+    // Make our s3 bucket which will hold the training data
+
+
+    const ingestBucket = new s3.Bucket(this, 'IngestBucket', {
+	removalPolicy: RemovalPolicy.DESTROY,   // dev only
+   });
+
+   // S3 trigger
+   ingestBucket.addEventNotification(
+     s3.EventType.OBJECT_CREATED_PUT,
+     new s3n.LambdaDestination(triggerFn),
+     { prefix: 'train-images/' }, 
+   );
+
+   // TrainingInput (in your pipeline.py)
+   "train": TrainingInput(
+     "s3://<IngestBucketName>/train-images/",
+     content_type="application/x-image",
+   ),
+
     
     // Give sagemaker an IAM role allowing jobs to access the s3 bucket
     // Also give it permission to read from the ECR which will contain the training and pipeline
@@ -125,7 +139,7 @@ const triggerFn = new lambda.Function(this, 'TriggerPipelineFn', {
   code: lambda.Code.fromAsset('lambda/trigger'), // folder with .py & requirements.txt
   handler: 'trigger_pipeline_fn.handler',
   environment: { PIPELINE_NAME: 'CaptionModelPipeline' },
-  vpc, subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+  vpc, vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
   securityGroups: [endpointSg],
 });
 
