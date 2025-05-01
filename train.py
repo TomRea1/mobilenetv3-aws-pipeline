@@ -75,6 +75,7 @@ scripted.save(script_path)
 # package the model up into the .tar.gz format
 tar_path = Path(model_out) / "model.tar.gz"
 with tarfile.open(tar_path, "w:gz") as tar:
-    tar.add(pt_path, arcname="mobilenetv3_traced.pt")
+    tar.add(state_path, arcname="model_state.pth")
+    tar.add(script_path, arcname="mobilenetv3_traced.pt")
 print(f"Packaged new model artefact: {tar_path}")
 
