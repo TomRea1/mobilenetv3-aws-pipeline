@@ -23,7 +23,7 @@ dataset  = ImageFolder(train_dir, transform=transform)
 loader   = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
 
 # build model architecture - thank you torchvision ! 
-net = torchvision.models.mobilenet_v3_small(weights=None)
+net = torchvision.models.mobilenet_v3_large(weights=None)
 
 # Scrape the tar off the model
 for archive in glob.glob(os.path.join(model_in, "*.tar.gz")):
