@@ -63,7 +63,7 @@ for epoch in range(1):
 print("Training loop finished")
 
 # save
-os.mkdirs(model_out, exist_ok=True)
+os.makedirs(model_out, exist_ok=True)
 state_path = Path(model_out)/"model_state.pth"
 script_path = Path(model_out)/"mobilenetv3_traced.pt"
 
