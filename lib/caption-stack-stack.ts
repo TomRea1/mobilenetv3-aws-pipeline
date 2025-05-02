@@ -14,7 +14,7 @@ export class CaptionStackStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    /* ───────────────── VPC ───────────────── */
+    
     const vpc = new ec2.Vpc(this, 'CaptionVpc', {
       maxAzs: 2,
       natGateways: 2,
@@ -30,19 +30,18 @@ export class CaptionStackStack extends Stack {
       subnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
     });
 
-    /* ───────────────── Buckets ───────────────── */
-    // 1) stack-managed ingest bucket (images land here)
+    
     const ingestBucket = new s3.Bucket(this, 'IngestBucket', {
       removalPolicy: RemovalPolicy.DESTROY,   // dev-only
       autoDeleteObjects: true,
     });
 
-    // 2) existing asset bucket (models, data capture)
+    
     const assetBucket = s3.Bucket.fromBucketName(
       this, 'ModelBucket', 'cdk-hnb659fds-assets-564750642551-eu-north-1',
     );
 
-    /* ───────────────── SageMaker role & SG ───────────────── */
+    
     const sagemakerRole = new iam.Role(this, 'SageMakerExecRole', {
       assumedBy: new iam.ServicePrincipal('sagemaker.amazonaws.com'),
       managedPolicies: [
@@ -57,7 +56,7 @@ export class CaptionStackStack extends Stack {
       allowAllOutbound: true,
     });
 
-    /* ───────────────── SageMaker model & endpoint ───────────────── */
+    
     const model = new sm.CfnModel(this, 'CaptionModel', {
       executionRoleArn: sagemakerRole.roleArn,
       primaryContainer: {
@@ -93,7 +92,7 @@ export class CaptionStackStack extends Stack {
     endpointConfig.addDependency(model);
     endpoint.addDependency(endpointConfig);
 
-    /* ───────────────── Lambda #1 : trigger pipeline ───────────────── */
+    // Lambdas 
     const triggerFn = new lambda.Function(this, 'TriggerPipelineFn', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code:    lambda.Code.fromAsset('lambda/trigger'),
@@ -115,7 +114,7 @@ export class CaptionStackStack extends Stack {
       resources: ['*'],
     }));
 
-    /* ───────────────── Lambda #2 : deploy new model ───────────────── */
+    
     const deployFn = new lambda.Function(this, 'DeployOnSuccessFn', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code:    lambda.Code.fromAsset('lambda/deploy'),
