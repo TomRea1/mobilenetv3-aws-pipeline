@@ -32,7 +32,7 @@ export class CaptionStackStack extends Stack {
 
     
     const ingestBucket = new s3.Bucket(this, 'IngestBucket', {
-      removalPolicy: RemovalPolicy.DESTROY,   // dev-only
+      removalPolicy: RemovalPolicy.DESTROY,  
       autoDeleteObjects: true,
     });
 
@@ -117,11 +117,11 @@ export class CaptionStackStack extends Stack {
     
     const deployFn = new lambda.Function(this, 'DeployIfGoodFn', {
       runtime: lambda.Runtime.PYTHON_3_9,
-      code:    lambda.Code.fromAsset('lambda/deploy'),
+      code:    lambda.Code.fromAsset('lambda/deploy/'),
       handler: 'deploy_if_good_fn.handler',
       environment: {
         SM_ROLE_ARN:   sagemakerRole.roleArn,
-        ENDPOINT_NAME: endpoint.ref,
+        ENDPOINT_NAME: endpoint.attrEndpointName,
         INFERENCE_IMAGE:
           '763104351884.dkr.ecr.eu-north-1.amazonaws.com/pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
         ASSET_BUCKET: assetBucket.bucketName,
@@ -145,14 +145,42 @@ export class CaptionStackStack extends Stack {
       ],
       resources: ['*'],
     }));
+    
+    deployFn.addToRolePolicy(new iam.PolicyStatement({
+        actions: ['s3:ListBucket'],
+        resources: [ assetBucket.bucketArn ],
+        conditions: {
+           StringLike: { 's3:prefix': [ 'output/' ] }
+        }
+    }));
+
+
+
+    deployFn.addToRolePolicy(new iam.PolicyStatement({
+       actions: ['s3:GetObject'],
+       resources: [ `${assetBucket.bucketArn}/output/` ],
+    }));
+
+
+
+
+     deployFn.addToRolePolicy(new iam.PolicyStatement({
+       actions: ['iam:PassRole'],
+       resources: [ sagemakerRole.roleArn ],
+     }));
+
+
+
+
+
 
     new events.Rule(this, 'PipelineSuccessRule', {
       eventPattern: {
         source:     ['aws.sagemaker'],
-        detailType: ['SageMaker Model Building Pipeline Execution Status Change'],
+        detailType: ['SageMaker Pipeline Execution Status Change'],
         detail: {
           pipelineName: ['CaptionModelPipeline'],
-          currentPipelineExecutionStatus: ['Succeeded'],
+          pipelineExecutionStatus: ['Succeeded'],
         },
       },
       targets: [new targets.LambdaFunction(deployFn)],
