@@ -115,15 +115,17 @@ export class CaptionStackStack extends Stack {
     }));
 
     
-    const deployFn = new lambda.Function(this, 'DeployOnSuccessFn', {
+    const deployFn = new lambda.Function(this, 'DeployIfGoodFn', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code:    lambda.Code.fromAsset('lambda/deploy'),
-      handler: 'deploy_on_success_fn.handler',
+      handler: 'deploy_if_good_fn.handler',
       environment: {
         SM_ROLE_ARN:   sagemakerRole.roleArn,
         ENDPOINT_NAME: endpoint.ref,
         INFERENCE_IMAGE:
           '763104351884.dkr.ecr.eu-north-1.amazonaws.com/pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
+        ASSET_BUCKET: assetBucket.bucketName,
+        OUTPUT_PREFIX: 'output/',   
         VPC_CONFIG: JSON.stringify({
           Subnets: vpc.privateSubnets.map(s => s.subnetId),
           SecurityGroupIds: [endpointSg.securityGroupId],
