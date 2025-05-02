@@ -13,7 +13,7 @@ sm = boto3.client("sagemaker")
 s3 = boto3.client("s3")
 
 def handler(event, context):
-    # 1) List all model.tar.gz under the training-output prefix
+    # list all model.tar.gz under the training-output prefix
     resp = s3.list_objects_v2(
         Bucket=ASSET_BUCKET,
         Prefix=OUTPUT_PREFIX

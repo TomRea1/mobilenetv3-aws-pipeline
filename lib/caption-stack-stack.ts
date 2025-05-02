@@ -15,6 +15,9 @@ export class CaptionStackStack extends Stack {
     super(scope, id, props);
 
     
+    // create the VPC with two area zones 
+    // two nat gateways - one for each public subnet to fascilitate internet comms 
+    // CIDR mask 24 for each - 251 IP range for each (256 - 5 held by AWS )
     const vpc = new ec2.Vpc(this, 'CaptionVpc', {
       maxAzs: 2,
       natGateways: 2,
@@ -25,23 +28,24 @@ export class CaptionStackStack extends Stack {
       restrictDefaultSecurityGroup: false,
     });
 
+    // Add the vpc gateway endpoint for private comms with s3 from the private subnet
     vpc.addGatewayEndpoint('S3Gw', {
       service: ec2.GatewayVpcEndpointAwsService.S3,
       subnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
     });
 
-    
+    // initialise ingest bucket for data 
     const ingestBucket = new s3.Bucket(this, 'IngestBucket', {
       removalPolicy: RemovalPolicy.DESTROY,  
       autoDeleteObjects: true,
     });
 
-    
+    // create asset bucket for the models 
     const assetBucket = s3.Bucket.fromBucketName(
       this, 'ModelBucket', 'cdk-hnb659fds-assets-564750642551-eu-north-1',
     );
 
-    
+    // create a sagemaker role so it can read from the s3 + fetch container image from ECR for training
     const sagemakerRole = new iam.Role(this, 'SageMakerExecRole', {
       assumedBy: new iam.ServicePrincipal('sagemaker.amazonaws.com'),
       managedPolicies: [
@@ -50,13 +54,14 @@ export class CaptionStackStack extends Stack {
       ],
     });
 
+    // security grouop for SM allow comms between VPC resources and sm endpoint 
     const endpointSg = new ec2.SecurityGroup(this, 'SmEndpointSG', {
       vpc,
       description: 'Allow HTTPS from VPC to SageMaker endpoint',
       allowAllOutbound: true,
     });
 
-    
+    // create model object to give to sagemaker endpoitn config (also EC2 for training)+ permissions
     const model = new sm.CfnModel(this, 'CaptionModel', {
       executionRoleArn: sagemakerRole.roleArn,
       primaryContainer: {
@@ -70,6 +75,7 @@ export class CaptionStackStack extends Stack {
       },
     });
 
+    // outline endpoint config - instance, model + data capture 
     const endpointConfig = new sm.CfnEndpointConfig(this, 'CaptionEndpointConfig', {
       productionVariants: [{
         modelName: model.attrModelName,
@@ -85,6 +91,7 @@ export class CaptionStackStack extends Stack {
       },
     });
 
+    // create endpoint + set dependencies ( model and endpoint config - otherwise wont run)
     const endpoint = new sm.CfnEndpoint(this, 'CaptionEndpoint', {
       endpointConfigName: endpointConfig.attrEndpointConfigName,
     });
@@ -93,6 +100,12 @@ export class CaptionStackStack extends Stack {
     endpoint.addDependency(endpointConfig);
 
     // Lambdas 
+
+    // set trigger function 
+    // - runtime for script
+    // - actual script path in app 
+    // - environment to run in 
+    // - vpc settings + security group so it knows where it is and who its allowed talk to 
     const triggerFn = new lambda.Function(this, 'TriggerPipelineFn', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code:    lambda.Code.fromAsset('lambda/trigger'),
@@ -103,18 +116,23 @@ export class CaptionStackStack extends Stack {
       securityGroups: [endpointSg],
     });
 
+    // event notification for bucket - if new data - trigger pipelein function 
+    // specify which directory itll trigger if new data goes in 
     ingestBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED_PUT,
       new s3n.LambdaDestination(triggerFn),
       { prefix: 'train-images/' },
     );
 
+    // permission for trigger func to actually do what its entire purpose is - wont
+    // run without this I learned the hard way 
     triggerFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ['sagemaker:StartPipelineExecution'],
       resources: ['*'],
     }));
 
-    
+    // write deploy function - same as previous except needs way more info and permissions 
+    // to read and write to the s3 
     const deployFn = new lambda.Function(this, 'DeployIfGoodFn', {
       runtime: lambda.Runtime.PYTHON_3_9,
       code:    lambda.Code.fromAsset('lambda/deploy/'),
@@ -136,6 +154,8 @@ export class CaptionStackStack extends Stack {
       securityGroups: [endpointSg],
     });
 
+
+    // deploy function permissions for endpoint
     deployFn.addToRolePolicy(new iam.PolicyStatement({
       actions: [
         'sagemaker:CreateModel',
@@ -146,6 +166,7 @@ export class CaptionStackStack extends Stack {
       resources: ['*'],
     }));
     
+    // permissions for writiing to bucket
     deployFn.addToRolePolicy(new iam.PolicyStatement({
         actions: ['s3:ListBucket'],
         resources: [ assetBucket.bucketArn ],
@@ -155,7 +176,7 @@ export class CaptionStackStack extends Stack {
     }));
 
 
-
+    // permissions for taking stuff from the bucket (images)
     deployFn.addToRolePolicy(new iam.PolicyStatement({
        actions: ['s3:GetObject'],
        resources: [ `${assetBucket.bucketArn}/output/` ],

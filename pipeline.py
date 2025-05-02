@@ -8,7 +8,7 @@ role = "arn:aws:iam::564750642551:role/CaptionStackStack-SageMakerExecRole64AF80
 
 sagemaker_session = sagemaker.session.Session()
 
-
+# where to run , what to run on, which dependencies, where to put the output 
 estimator = Estimator(
     image_uri=sagemaker.image_uris.retrieve(
     framework="pytorch", 
@@ -39,7 +39,7 @@ training_step = TrainingStep(
         ),
     },
 )
-
+# which pipeline 
 pipeline = Pipeline(
     name="CaptionModelPipeline",
     steps=[training_step],
