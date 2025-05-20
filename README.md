@@ -1,10 +1,9 @@
-HEAD
 # mobilenetv3-aws-pipeline
 ML pipeline for inference and auto training/deployment of fine tuned model. 
 
-# Welcome to your CDK TypeScript project
+# Welcome to my pipeline for mobilenetv3 ! 
 
-This is a blank project for CDK development with TypeScript.
+This is a project for hosting mobilenetv3 on the cloud with automated training on new data when added to the s3 bucket. Newly trained models are automatically deployed to the sagemaker endpoint via a lambda function. Inference on uploaded images is handled by API calls to the sagemaker endpoint. This project was built with the AWS CDK and TypeScript.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
