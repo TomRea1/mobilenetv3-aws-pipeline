@@ -5,6 +5,10 @@ ML pipeline for inference and auto training/deployment of fine tuned model.
 
 This is a project for hosting mobilenetv3 on the cloud with automated training on new data when added to the s3 bucket. Newly trained models are automatically deployed to the sagemaker endpoint via a lambda function. Inference on uploaded images is handled by API calls to the sagemaker endpoint. This project was built with the AWS CDK and TypeScript.
 
+![image](https://github.com/user-attachments/assets/ab558aa8-eb5d-429c-9b3c-2753d56593a7)
+
+
+
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 # How to deploy for yourself : 
