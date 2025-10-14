@@ -10,7 +10,7 @@ import * as s3n      from 'aws-cdk-lib/aws-s3-notifications';
 import * as events   from 'aws-cdk-lib/aws-events';
 import * as targets  from 'aws-cdk-lib/aws-events-targets';
 
-export class CaptionStackStack extends Stack {
+export class CaptionStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -19,8 +19,8 @@ export class CaptionStackStack extends Stack {
     // two nat gateways - one for each public subnet to fascilitate internet comms 
     // CIDR mask 24 for each - 251 IP range for each (256 - 5 held by AWS )
     const vpc = new ec2.Vpc(this, 'CaptionVpc', {
-      maxAzs: 2,
-      natGateways: 2,
+      maxAzs: 1,
+      natGateways: 1,
       subnetConfiguration: [
         { name: 'public',  subnetType: ec2.SubnetType.PUBLIC,              cidrMask: 24 },
         { name: 'private', subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS, cidrMask: 24 },
@@ -42,7 +42,7 @@ export class CaptionStackStack extends Stack {
 
     // create asset bucket for the models 
     const assetBucket = s3.Bucket.fromBucketName(
-      this, 'ModelBucket', 'cdk-hnb659fds-assets-564750642551-eu-north-1',
+      this, 'ModelBucket', 'cdk-hnb659fds-assets-708175751473-eu-west-1',
     );
 
     // create a sagemaker role so it can read from the s3 + fetch container image from ECR for training
@@ -65,30 +65,26 @@ export class CaptionStackStack extends Stack {
     const model = new sm.CfnModel(this, 'CaptionModel', {
       executionRoleArn: sagemakerRole.roleArn,
       primaryContainer: {
-        image: '763104351884.dkr.ecr.eu-north-1.amazonaws.com/' +
+        image: '763104351884.dkr.ecr.eu-west-1.amazonaws.com/' +
                'pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
-        modelDataUrl: `s3://${assetBucket.bucketName}/model.tar.gz`,
-      },
-      vpcConfig: {
-        subnets: vpc.privateSubnets.map(s => s.subnetId),
-        securityGroupIds: [endpointSg.securityGroupId],
-      },
+        modelDataUrl: `s3://${assetBucket.bucketName}/model/model.tar.gz`,
+      }//,
+    //   vpcConfig: {
+    //     subnets: vpc.privateSubnets.map(s => s.subnetId),
+    //     securityGroupIds: [endpointSg.securityGroupId],
+    //   },
     });
 
     // outline endpoint config - instance, model + data capture 
     const endpointConfig = new sm.CfnEndpointConfig(this, 'CaptionEndpointConfig', {
       productionVariants: [{
         modelName: model.attrModelName,
-        variantName: 'AllTraffic',
-        instanceType: 'ml.m5.xlarge',
-        initialInstanceCount: 1,
+	variantName: 'AllTraffic',
+        serverlessConfig: {
+            memorySizeInMb: 2048,  
+            maxConcurrency: 2,      
+          },
       }],
-      dataCaptureConfig: {
-        enableCapture: true,
-        initialSamplingPercentage: 100,
-        destinationS3Uri: `s3://${assetBucket.bucketName}/datacapture/`,
-        captureOptions: [{ captureMode: 'Input' }, { captureMode: 'Output' }],
-      },
     });
 
     // create endpoint + set dependencies ( model and endpoint config - otherwise wont run)
@@ -141,7 +137,7 @@ export class CaptionStackStack extends Stack {
         SM_ROLE_ARN:   sagemakerRole.roleArn,
         ENDPOINT_NAME: endpoint.attrEndpointName,
         INFERENCE_IMAGE:
-          '763104351884.dkr.ecr.eu-north-1.amazonaws.com/pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
+          '763104351884.dkr.ecr.eu-west-1.amazonaws.com/pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
         ASSET_BUCKET: assetBucket.bucketName,
         OUTPUT_PREFIX: 'output/',   
         VPC_CONFIG: JSON.stringify({
