@@ -3,15 +3,13 @@ ML pipeline for inference and auto training/deployment of fine tuned model.
 
 # Welcome to my pipeline for mobilenetv3 ! 
 
-This is a project for hosting mobilenetv3 on the cloud with automated training on new data when added to the s3 bucket. Newly trained models are automatically deployed to the sagemaker endpoint via a lambda function. Inference on uploaded images is handled by API calls to the sagemaker endpoint. This project was built with the AWS CDK and TypeScript.
-
-![image](https://github.com/user-attachments/assets/ab558aa8-eb5d-429c-9b3c-2753d56593a7)
+This is a project for hosting mobilenetv3 on the cloud with automated training on new data when added to the s3 bucket. Newly trained models are automatically deployed to the sagemaker endpoint via a lambda function. Inference on uploaded images is handled by API calls to the sagemaker endpoint. This project was built with the AWS CDK, Python and TypeScript.
 
 
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+The `cdk.json` file tells the CDK Toolkit how to execute the app.
 
-# How to deploy for yourself : 
+# How to deploy : 
 
 Open up AWS Cloudshell and create a new directory for your project : $ `mkdir <project-name>-cdk && cd <project-name>-cdk`
 
@@ -50,4 +48,4 @@ If you want to check on its progress you can go to SageMaker on the AWS console,
 * `npx cdk deploy`  deploy this stack to your default AWS account/region
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
-2e02b16 (COMMITTING FROM CLOUDSHELL - hope this works cause might jump out the third floor of the glucksman otherwise , sound)
+
