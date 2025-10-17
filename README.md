@@ -9,17 +9,6 @@ This is a project for hosting mobilenetv3 on the cloud with automated training o
 
 The `cdk.json` file tells the CDK Toolkit how to execute the app.
 
-# How to deploy : 
-
-Open up AWS Cloudshell and create a new directory for your project : $ `mkdir <project-name>-cdk && cd <project-name>-cdk`
-
-Initialise your app inside your new directory : $ `cdk init app --language typescript`
-
-- This will create some default files in your app directory - the bones of any cdk app. You can delete them and clone this repository inside your app instead.
-
-Clone this repository : $ `git clone https://<this repo https>`
-
-Now just `npx run build`, `cdk synth`, `cdk deploy` and you should be all set ! 
 
 # Run Inference 
 
@@ -32,6 +21,7 @@ To run inference,
   --body fileb://<your-image-name>.jpg \
   out.json && cat out.json
 `
+
 - You should hear back from the endpoint pretty quick.
 - To convert the raw output to a label - run the label.py script : $ `python3 label.py`
 
@@ -42,10 +32,10 @@ If you want to check on its progress you can go to SageMaker on the AWS console,
 
 ## Useful commands
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+* `npm run build`   :  compile typescript to js
+* `npm run watch`   :  watch for changes and compile
+* `npm run test`    :  perform the jest unit tests
+* `npx cdk deploy`  :  deploy this stack to default AWS account/region
+* `npx cdk diff`    :  compare deployed stack with current state
+* `npx cdk synth`   :  emits the synthesized CloudFormation template
 
