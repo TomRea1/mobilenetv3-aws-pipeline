@@ -1,0 +1,21 @@
+{
+  "Version":"2012-10-17",
+  "Statement":[
+    { "Effect":"Allow",
+      "Action":[
+        "sagemaker:CreateTrainingJob","sagemaker:DescribeTrainingJob","sagemaker:StopTrainingJob",
+        "sagemaker:AddTags","sagemaker:List*"
+      ],
+      "Resource":"*"
+    },
+    { "Effect":"Allow","Action":["s3:ListBucket"],
+      "Resource":[
+        "arn:aws:s3:::captionstack-ingestbucket2b3522fa-fdkl5cu2mskx",
+        "arn:aws:s3:::cdk-hnb659fds-assets-708175751473-eu-west-1"
+      ]
+    },
+    { "Effect":"Allow","Action":["s3:GetObject"],"Resource":"arn:aws:s3:::captionstack-ingestbucket2b3522fa-fdkl5cu2mskx/*" },
+    { "Effect":"Allow","Action":["s3:PutObject","s3:GetObject"],"Resource":"arn:aws:s3:::cdk-hnb659fds-assets-708175751473-eu-west-1/*" },
+    { "Effect":"Allow","Action":"iam:PassRole","Resource":"arn:aws:iam::708175751473:role/SageMakerPipelineExecRole" }
+  ]
+}
