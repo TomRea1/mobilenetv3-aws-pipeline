@@ -18,9 +18,12 @@ transform = T.Compose([
     T.Resize((224, 224)),
     T.ToTensor(),
 ])
+
 dataset  = ImageFolder(train_dir, transform=transform)
 # batch is 1 because i've only uploaded a few test images 
-loader   = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
+num_classes = len(dataset.classes)
+assert num_classes >= 1 
+loader   = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
 
 # Scrape the tar off the model
 for archive in glob.glob(os.path.join(model_in, "*.tar.gz")):

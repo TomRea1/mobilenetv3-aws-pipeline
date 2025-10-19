@@ -47,6 +47,7 @@ export class CaptionStack extends Stack {
 
     // create a sagemaker role so it can read from the s3 + fetch container image from ECR for training
     const sagemakerRole = new iam.Role(this, 'SageMakerExecRole', {
+      roleName: 'SageMakerExecRole',
       assumedBy: new iam.ServicePrincipal('sagemaker.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonS3ReadOnlyAccess'),
