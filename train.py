@@ -1,5 +1,5 @@
 
-import os, tarfile, torch, torchvision, glob
+import os, tarfile, torch, torchvision, glob, shutil
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision import transforms as T
@@ -12,6 +12,20 @@ from pathlib import Path
 train_dir   = os.environ.get("SM_CHANNEL_TRAIN",  "/opt/ml/input/data/train")
 model_in    = os.environ.get("SM_CHANNEL_MODEL",  "/opt/ml/input/data/model")  
 model_out   = os.environ["SM_MODEL_DIR"]                                           
+
+model_dir = Path(model_out)
+code_src = Path("code")
+code_dst = model_dir / "code"
+if code_src.exists():
+	if code_dst.exists():
+		shutil.rmtree(code_dst)
+	shutil.copytree(code_src, code_dst)
+tar_path = model_dir / "model.tar.gz"
+with tarfile.open(tar_path, "w:gz") as tar:
+	tar.add(state_path, arcname="model_state.pth)
+	tar.add(script_path, arcname="mobilenetv3_traced.pt")
+	tar.add(code_dst, arcname="code")
+print(f"Packaged New Model at {tar_path}")
 
 # Data
 transform = T.Compose([
