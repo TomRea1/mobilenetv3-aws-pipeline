@@ -46,7 +46,7 @@ export class CaptionStack extends Stack {
     );
 
     // create a sagemaker role so it can read from the s3 + fetch container image from ECR for training
-    const sagemakerRole = new iam.Role(this, 'SageMakerExecRole', {
+    const sagemakerExecRole = new iam.Role(this, 'SageMakerExecRole', {
       roleName: 'SageMakerExecRole',
       assumedBy: new iam.ServicePrincipal('sagemaker.amazonaws.com'),
       managedPolicies: [
@@ -54,6 +54,27 @@ export class CaptionStack extends Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonEC2ContainerRegistryReadOnly'),
       ],
     });
+
+    sagemakerExecRole.addToPolicy(new iam.PolicyStatement({
+	actions: [
+	  'sagemaker:CreateTrainingJob',
+	  'sagemaker:DescribeTrainingJob',
+	  'sagemaker:StopTrainingJob',
+	  'sagemaker:AddTags',
+	  'sagemaker:List*',
+	],
+	resources : ['*'],
+    }));
+
+
+    sagemakerExecRole.addToPolicy(new iam.PolicyStatement({
+      actions: ['iam:PassRole'],
+      resources: [sagemakerExecRole.roleArn],
+    }));
+
+    assetBucket.grantRead(sagemakerExecRole, 'model/*');
+    assetBucket.grantReadWrite(sagemakerExecRole, 'output/*');
+
 
     // security grouop for SM allow comms between VPC resources and sm endpoint 
     const endpointSg = new ec2.SecurityGroup(this, 'SmEndpointSG', {
@@ -64,7 +85,7 @@ export class CaptionStack extends Stack {
 
     // create model object to give to sagemaker endpoitn config (also EC2 for training)+ permissions
     const model = new sm.CfnModel(this, 'CaptionModel', {
-      executionRoleArn: sagemakerRole.roleArn,
+      executionRoleArn: sagemakerExecRole.roleArn,
       primaryContainer: {
         image: '763104351884.dkr.ecr.eu-west-1.amazonaws.com/' +
                'pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
@@ -135,7 +156,7 @@ export class CaptionStack extends Stack {
       code:    lambda.Code.fromAsset('lambda/deploy/'),
       handler: 'deploy_if_good_fn.handler',
       environment: {
-        SM_ROLE_ARN:   sagemakerRole.roleArn,
+        SM_ROLE_ARN:   sagemakerExecRole.roleArn,
         ENDPOINT_NAME: endpoint.attrEndpointName,
         INFERENCE_IMAGE:
           '763104351884.dkr.ecr.eu-west-1.amazonaws.com/pytorch-inference:2.0.0-cpu-py310-ubuntu20.04-sagemaker',
@@ -184,7 +205,7 @@ export class CaptionStack extends Stack {
 
      deployFn.addToRolePolicy(new iam.PolicyStatement({
        actions: ['iam:PassRole'],
-       resources: [ sagemakerRole.roleArn ],
+       resources: [ sagemakerExecRole.roleArn ],
      }));
 
 
